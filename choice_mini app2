@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CHOICE — Ранний доступ</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --gold: #FFD700;
+            --gold-dark: #B8860B;
+            --bg: #050505;
+            --card: #0a0a0a;
+            --text: #ffffff;
+            --text-secondary: #cccccc;
+            --accent: #1a1a1a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--bg);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Анимированный фон */
+        .bg-particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: float 6s infinite;
+            opacity: 0;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.3), 0 0 40px rgba(255,215,0,0.1); }
+            50% { box-shadow: 0 0 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.3); }
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px 16px 30px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Заголовок */
+        .header {
+            text-align: center;
+            padding: 20px 0 10px;
+            animation: slideUp 0.8s ease;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-dark));
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            color: #000;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+        
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+        }
+        
+        .logo-gold {
+            background: linear-gradient(135deg, var(--gold), #FFF8DC, var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: var(--gold);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        
+        .tagline {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Таймер */
+        .timer-section {
+            background: var(--card);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin: 16px 0;
+            animation: slideUp 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .timer-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+        
+        .timer-title {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        
+        .timer-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--gold);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 3px;
+        }
+        
+        .timer-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* Основная карточка */
+        .main-card {
+            background: var(--card);
+            border: 1px solid rgba(255,215,0,0.15);
+            border-radius: 24px;
+            padding: 24px 20px;
+            animation: slideUp 1.2s ease, glow 3s ease-in-out infinite;
+            margin: 8px 0 16px;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .benefit-list {
+            list-style: none;
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,215,0,0.06);
+        }
+        
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+        
+        .benefit-icon {
+            font-size: 1.2rem;
+            min-width: 28px;
+            text-align: center;
+        }
+        
+        .benefit-text {
+            flex: 1;
+        }
+        
+        .benefit-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        
+        .benefit-desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Цена */
+        .price-section {
+            background: var(--card);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin: 8px 0 16px;
+            animation: slideUp 1.4s ease;
+        }
+        
+        .old-price {
+            font-size: 1.2rem;
+            color: #666;
+            text-decoration: line-through;
+        }
+        
+        .new-price {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--gold);
+        }
+        
+        .price-note {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .savings-badge {
+            display: inline-block;
+            background: #2e7d32;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        
+        /* Кнопка */
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-dark));
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite, pulse 2s ease-in-out infinite;
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            letter-spacing: 1px;
+            margin: 8px 0;
+            transition: all 0.3s;
+        }
+        
+        .cta-button:active {
+            transform: scale(0.96);
+        }
+        
+        .cta-sub {
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* Срочность */
+        .urgency {
+            text-align: center;
+            padding: 12px;
+            animation: slideUp 1.6s ease;
+        }
+        
+        .urgency-text {
+            font-size: 0.75rem;
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+        
+        .spots-left {
+            display: inline-block;
+            background: rgba(255,107,107,0.1);
+            border: 1px solid rgba(255,107,107,0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #ff6b6b;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        
+        @media (min-width: 600px) {
+            .container { padding: 30px 24px 40px; }
+            .logo { font-size: 2.8rem; }
+            .timer-value { font-size: 2.5rem; }
+            .new-price { font-size: 3rem; }
+            .cta-button { padding: 18px; font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-particles" id="particles"></div>
+
+<div class="container">
+    
+    <!-- Заголовок -->
+    <div class="header">
+        <div class="badge">⚡ Закрытый запуск</div>
+        <div class="logo">
+            <span class="logo-gold">CHOICE</span>
+        </div>
+        <div class="subtitle">30-DAY TRACKER</div>
+        <div class="tagline">Авторская программа по избавлению от мастурбации</div>
+    </div>
+    
+    <!-- Таймер -->
+    <div class="timer-section">
+        <div class="timer-title">⏳ До открытия для всех</div>
+        <div class="timer-value" id="timer">14:00:00:00</div>
+        <div class="timer-label">дней : часов : минут : секунд</div>
+    </div>
+    
+    <!-- Преимущества -->
+    <div class="main-card">
+        <div class="section-title">🔥 Что ты получаешь СЕЙЧАС</div>
+        <ul class="benefit-list">
+            <li class="benefit-item">
+                <span class="benefit-icon">👑</span>
+                <div class="benefit-text">
+                    <div class="benefit-title">Premium-доступ по цене Базового</div>
+                    <div class="benefit-desc">1000₽ вместо 2500₽ — экономия 60%</div>
+                </div>
+            </li>
+            <li class="benefit-item">
+                <span class="benefit-icon">🔒</span>
+                <div class="benefit-text">
+                    <div class="benefit-title">Доступ на 2 недели раньше всех</div>
+                    <div class="benefit-desc">Начни программу, пока другие ждут</div>
+                </div>
+            </li>
+            <li class="benefit-item">
+                <span class="benefit-icon">🎯</span>
+                <div class="benefit-text">
+                    <div class="benefit-title">Статус соавтора</div>
+                    <div class="benefit-desc">Твои идеи повлияют на развитие продукта</div>
+                </div>
+            </li>
+            <li class="benefit-item">
+                <span class="benefit-icon">💬</span>
+                <div class="benefit-text">
+                    <div class="benefit-title">Закрытое комьюнити первых</div>
+                    <div class="benefit-desc">VIP-группа с такими же офицерами</div>
+                </div>
+            </li>
+            <li class="benefit-item">
+                <span class="benefit-icon">📞</span>
+                <div class="benefit-text">
+                    <div class="benefit-title">Прямая связь с автором</div>
+                    <div class="benefit-desc">Персональная поддержка и разбор срывов</div>
+                </div>
+            </li>
+            <li class="benefit-item">
+                <span class="benefit-icon">🏆</span>
+                <div class="benefit-text">
+                    <div class="benefit-title">Сертификат + достижения</div>
+                    <div class="benefit-desc">Докажи себе и другим — ты смог</div>
+                </div>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Цена -->
+    <div class="price-section">
+        <div class="old-price">2500₽</div>
+        <div class="new-price">1000₽</div>
+        <div class="price-note">единоразово • доступ навсегда</div>
+        <div class="savings-badge">💰 Экономия 1500₽</div>
+    </div>
+    
+    <!-- Кнопка -->
+    <a class="cta-button" href="https://t.me/Piholaa" target="_blank">
+        💎 Приобрести доступ
+    </a>
+    <div class="cta-sub">Ты попадёшь в чат с автором для оплаты</div>
+    
+    <!-- Срочность -->
+    <div class="urgency">
+        <div class="urgency-text">⚠️ Предложение действительно только для первых 15 офицеров</div>
+        <div class="spots-left">🔥 Осталось мест: 15</div>
+    </div>
+
+</div>
+
+<script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#050505');
+        tg.setBackgroundColor('#050505');
+    }
+    
+    // Частицы на фоне
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 6 + 's';
+        particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+        particlesContainer.appendChild(particle);
+    }
+    
+    // Таймер обратного отсчёта (2 недели от текущего момента)
+    function startCountdown() {
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 14);
+        
+        function updateTimer() {
+            const now = new Date();
+            const diff = endDate - now;
+            
+            if (diff <= 0) {
+                document.getElementById('timer').textContent = '00:00:00:00';
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('timer').textContent = 
+                String(days).padStart(2, '0') + ':' +
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+        }
+        
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    }
+    
+    startCountdown();
+</script>
+
+</body>
+</html>
